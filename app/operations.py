@@ -274,7 +274,8 @@ class OperationFactory:
         'divide': Division,
         'power': Power,
         'root': Root,
-        'modulus': Modulus
+        'modulus': Modulus,
+        'percentage': Percentage
     }
 
     @classmethod

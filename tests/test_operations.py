@@ -12,7 +12,8 @@ from app.operations import (
     Power,
     Root,
     OperationFactory,
-    Modulus
+    Modulus,
+    Percentage
 )
 
 
@@ -155,6 +156,26 @@ class TestModulus(BaseOperationTest):
         },
     }
 
+class TestPercentage(BaseOperationTest):
+    """Test Percentage operation."""
+
+    operation_class = Percentage
+    valid_test_cases = {
+        "standard_percentage": {"a": "25", "b": "100", "expected": "25"},
+        "half": {"a": "5", "b": "10", "expected": "50"},
+        "greater_than_base": {"a": "150", "b": "100", "expected": "150"},
+        "zero_numerator": {"a": "0", "b": "50", "expected": "0"},
+        "decimal_values": {"a": "2.5", "b": "10", "expected": "25"},
+    }
+    invalid_test_cases = {
+        "zero_base": {
+            "a": "25",
+            "b": "0",
+            "error": ValidationError,
+            "message": "Base cannot be zero for percentage calculation",
+        },
+    }
+
 class TestPower(BaseOperationTest):
     """Test Power operation."""
 
@@ -214,6 +235,8 @@ class TestOperationFactory:
             'divide': Division,
             'power': Power,
             'root': Root,
+            'modulus': Modulus,
+            'percent': Percentage
         }
 
         for op_name, op_class in operation_map.items():
