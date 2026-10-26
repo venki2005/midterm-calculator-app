@@ -167,6 +167,14 @@ class Division(Operation):
         self.validate_operands(a, b)
         return a / b
 
+class Modulus(Operation):
+    """Compute the remainder of the division of two numbers."""
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        if b == Decimal("0"):
+            raise ValidationError("Modulus by zero is not allowed")
+        return a % b
+
 
 class Power(Operation):
     """
@@ -265,7 +273,8 @@ class OperationFactory:
         'multiply': Multiplication,
         'divide': Division,
         'power': Power,
-        'root': Root
+        'root': Root,
+        'modulus': Modulus
     }
 
     @classmethod
