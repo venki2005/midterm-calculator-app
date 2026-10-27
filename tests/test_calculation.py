@@ -55,6 +55,27 @@ def test_unknown_operation():
     with pytest.raises(OperationError, match="Unknown operation"):
         Calculation(operation="Unknown", operand1=Decimal("5"), operand2=Decimal("3"))
 
+def test_zero_root():
+    with pytest.raises(OperationError, match="Zero root is undefined"):
+        Calculation(operation="Root", operand1=Decimal("9"), operand2=Decimal("0"))
+
+
+def test_from_dict_missing_keys():
+    with pytest.raises(OperationError, match="Invalid calculation data"):
+        Calculation.from_dict({"operation": "Addition"})
+
+
+def test_str_and_repr():
+    calc = Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))
+    assert str(calc) == "Addition(2, 3) = 5"
+    assert "Calculation(operation='Addition'" in repr(calc)
+
+
+def test_equality_with_non_calculation():
+    calc = Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))
+    assert calc != "not_a_calculation"
+    assert calc != 42
+    assert calc != None
 
 def test_to_dict():
     calc = Calculation(operation="Addition", operand1=Decimal("2"), operand2=Decimal("3"))

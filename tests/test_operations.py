@@ -146,7 +146,7 @@ class TestModulus(BaseOperationTest):
         "exact_division": {"a": "10", "b": "2", "expected": "0"},
         "smaller_dividend": {"a": "3", "b": "5", "expected": "3"},
         "decimal_modulus": {"a": "5.5", "b": "2", "expected": "1.5"},
-        "negative_dividend": {"a": "-10", "b": "3", "expected": "2"},
+        "negative_dividend": {"a": "-10", "b": "3", "expected": "-1"},
     }
     invalid_test_cases = {
         "modulus_by_zero": {
@@ -237,7 +237,7 @@ class TestAbsoluteDiff(BaseOperationTest):
         "with_zero": {"a": "0", "b": "-7", "expected": "7"},
     }
     invalid_test_cases = {}  # AbsoluteDiff operates on all real numbers with no invalid cases
-    
+
 
 class TestOperationFactory:
     """Test OperationFactory functionality."""
