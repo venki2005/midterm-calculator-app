@@ -59,10 +59,8 @@ class CalculatorConfig:
             str(self.base_dir / "logs")
         )).resolve()
 
-
     @property
     def history_dir(self) -> Path:
-        
         return Path(os.getenv(
             'CALCULATOR_HISTORY_DIR',
             str(self.base_dir / "history")
@@ -70,7 +68,6 @@ class CalculatorConfig:
 
     @property
     def history_file(self) -> Path:
-        
         return Path(os.getenv(
             'CALCULATOR_HISTORY_FILE',
             str(self.history_dir / "calculator_history.csv")
@@ -78,17 +75,26 @@ class CalculatorConfig:
 
     @property
     def log_file(self) -> Path:
-         
         return Path(os.getenv(
             'CALCULATOR_LOG_FILE',
             str(self.log_dir / "calculator.log")
         )).resolve()
 
     def validate(self) -> None:
-         
         if self.max_history_size <= 0:
             raise ConfigurationError("max_history_size must be positive")
         if self.precision <= 0:
             raise ConfigurationError("precision must be positive")
         if self.max_input_value <= 0:
             raise ConfigurationError("max_input_value must be positive")
+
+    @classmethod
+    def ensure_directories(cls, config: Optional["CalculatorConfig"] = None) -> None:
+        """Create necessary directories for log and history storage."""
+        instance = config or cls()
+        instance.log_dir.mkdir(parents=True, exist_ok=True)
+        instance.history_dir.mkdir(parents=True, exist_ok=True)
+
+
+# Backwards compatibility alias for modules importing `Config`
+Config = CalculatorConfig

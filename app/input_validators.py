@@ -4,9 +4,10 @@
 
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import Any, Optional, Tuple
 from app.calculator_config import CalculatorConfig
 from app.exceptions import ValidationError
+
 
 @dataclass
 class InputValidator:
@@ -36,3 +37,29 @@ class InputValidator:
             return number.normalize()
         except InvalidOperation as e:
             raise ValidationError(f"Invalid number format: {value}") from e
+
+
+def validate_operands(
+    a: Any,
+    b: Any,
+    config: Optional[CalculatorConfig] = None
+) -> Tuple[Decimal, Decimal]:
+    """
+    Validate two input operands and convert them to Decimal.
+
+    Args:
+        a: First operand
+        b: Second operand
+        config: Optional calculator configuration (defaults to a new CalculatorConfig instance)
+
+    Returns:
+        Tuple[Decimal, Decimal]: Validated decimal numbers
+    """
+    cfg = config or CalculatorConfig()
+    return (
+        InputValidator.validate_number(a, cfg),
+        InputValidator.validate_number(b, cfg),
+    )
+
+
+__all__ = ["InputValidator", "validate_operands"]

@@ -4,7 +4,7 @@
 
 from abc import ABC, abstractmethod
 from decimal import Decimal
-from typing import Dict
+from typing import Dict, List
 from app.exceptions import ValidationError
 
 
@@ -291,6 +291,11 @@ class OperationFactory:
         'absolute_diff': AbsoluteDiff
     }
 
+    @classmethod
+    def list_operations(cls) -> List[str]:
+        """Return a list of all registered operation names."""
+        return list(cls._operations.keys())
+    
     @classmethod
     def register_operation(cls, name: str, operation_class: type) -> None:
         """
