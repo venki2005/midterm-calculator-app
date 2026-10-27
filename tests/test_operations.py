@@ -236,6 +236,7 @@ class TestAbsoluteDiff(BaseOperationTest):
         "decimals": {"a": "5.5", "b": "2.2", "expected": "3.3"},
         "with_zero": {"a": "0", "b": "-7", "expected": "7"},
     }
+    invalid_test_cases = {}  # AbsoluteDiff operates on all real numbers with no invalid cases
     
 
 class TestOperationFactory:

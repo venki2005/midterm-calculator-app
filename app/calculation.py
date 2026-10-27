@@ -31,7 +31,11 @@ class Calculation:
                 Decimal(pow(float(x), 1 / float(y))) 
                 if x >= 0 and y != 0 
                 else self._raise_invalid_root(x, y)
-            )
+            ),
+
+            "Modulus": lambda x, y: x % y if y != 0 else self._raise_mod_zero(),
+            "Percentage": lambda x, y: (x * y) / Decimal(100),
+            "AbsoluteDiff": lambda x, y: abs(x - y)
         }
 
         op = operations.get(self.operation)
@@ -130,3 +134,6 @@ class Calculation:
             ).normalize())
         except InvalidOperation:  # pragma: no cover
             return str(self.result)
+
+    def _raise_mod_zero():
+        raise OperationError("Modulo by zero is not allowed")    
