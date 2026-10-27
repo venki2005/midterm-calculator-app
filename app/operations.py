@@ -256,6 +256,18 @@ class Root(Operation):
         self.validate_operands(a, b)
         return Decimal(pow(float(a), 1 / float(b)))
 
+class Percentage(Operation):
+    """Calculate the percentage of one number with respect to another ((a / b) * 100)."""
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        if b == Decimal("0"):
+            raise ValidationError("Base cannot be zero for percentage calculation")
+        return (a / b) * Decimal("100")
+
+class AbsoluteDiff(Operation):
+    def execute(self, a: float, b: float) -> float:
+        return abs(a - b)
+
 
 class OperationFactory:
     """
@@ -275,7 +287,8 @@ class OperationFactory:
         'power': Power,
         'root': Root,
         'modulus': Modulus,
-        'percentage': Percentage
+        'percent': Percentage,
+        'absolute_diff': AbsoluteDiff
     }
 
     @classmethod

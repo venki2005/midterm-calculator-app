@@ -13,7 +13,8 @@ from app.operations import (
     Root,
     OperationFactory,
     Modulus,
-    Percentage
+    Percentage,
+    AbsoluteDiff
 )
 
 
@@ -222,6 +223,20 @@ class TestRoot(BaseOperationTest):
         },
     }
 
+class TestAbsoluteDiff(BaseOperationTest):
+    """Test AbsoluteDiff operation."""
+
+    operation_class = AbsoluteDiff
+    valid_test_cases = {
+        "positive_a_greater": {"a": "10", "b": "4", "expected": "6"},
+        "positive_b_greater": {"a": "4", "b": "10", "expected": "6"},
+        "equal_numbers": {"a": "5", "b": "5", "expected": "0"},
+        "mixed_signs": {"a": "-5", "b": "3", "expected": "8"},
+        "both_negative": {"a": "-10", "b": "-4", "expected": "6"},
+        "decimals": {"a": "5.5", "b": "2.2", "expected": "3.3"},
+        "with_zero": {"a": "0", "b": "-7", "expected": "7"},
+    }
+    
 
 class TestOperationFactory:
     """Test OperationFactory functionality."""
@@ -236,7 +251,8 @@ class TestOperationFactory:
             'power': Power,
             'root': Root,
             'modulus': Modulus,
-            'percent': Percentage
+            'percent': Percentage,
+            'absolute_diff': AbsoluteDiff
         }
 
         for op_name, op_class in operation_map.items():
