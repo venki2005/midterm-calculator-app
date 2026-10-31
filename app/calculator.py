@@ -1,3 +1,4 @@
+
 ########################
 # Calculator Class      #
 ########################
@@ -72,7 +73,8 @@ class Calculator:
         except Exception as e:
             logging.warning(f"Could not load existing history: {e}")
 
-        logging.info("Calculator initialized successfully with configuration")
+        # Exact log message required by tests/test_calculator.py
+        logging.info("Calculator initialized with configuration")
 
     def _setup_logging(self) -> None:
         """Configure the logging system."""
@@ -162,7 +164,6 @@ class Calculator:
                     result=result
                 )
             except TypeError:
-                # Fallback if Calculation.__init__ does not take result
                 calculation = Calculation(
                     operation=str(self.operation_strategy),
                     operand1=validated_a,
