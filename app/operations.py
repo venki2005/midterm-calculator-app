@@ -1,337 +1,222 @@
-########################
-# Operation Classes    #
-########################
+"""
+Operation classes implementing the Command/Strategy pattern for the calculator,
+and OperationFactory for dynamic operation creation.
+"""
 
 from abc import ABC, abstractmethod
-from decimal import Decimal
-from typing import Dict, List
-from app.exceptions import ValidationError
+from decimal import Decimal, InvalidOperation
+from typing import Dict, List, Type
+
+from app.exceptions import OperationError
 
 
 class Operation(ABC):
-    """
-    Abstract base class for calculator operations.
-
-    Defines the interface for all arithmetic operations. Each operation must
-    implement the execute method and can optionally override operand validation.
-    """
+    """Abstract base class for all calculator operations."""
 
     @abstractmethod
     def execute(self, a: Decimal, b: Decimal) -> Decimal:
         """
-        Execute the operation.
-
-        Performs the arithmetic operation on the provided operands.
+        Execute the operation on two Decimal operands.
 
         Args:
-            a (Decimal): First operand.
-            b (Decimal): Second operand.
+            a: First operand
+            b: Second operand
 
         Returns:
-            Decimal: Result of the operation.
-
-        Raises:
-            OperationError: If the operation fails.
+            Decimal: Computed result
         """
         pass  # pragma: no cover
 
-    def validate_operands(self, a: Decimal, b: Decimal) -> None:
-        """
-        Validate operands before execution.
-
-        Can be overridden by subclasses to enforce specific validation rules
-        for different operations.
-
-        Args:
-            a (Decimal): First operand.
-            b (Decimal): Second operand.
-
-        Raises:
-            ValidationError: If operands are invalid.
-        """
-        pass
-
     def __str__(self) -> str:
-        """
-        Return operation name for display.
-
-        Provides a string representation of the operation, typically the class name.
-
-        Returns:
-            str: Name of the operation.
-        """
-        return self.__class__.__name__
+        """Return the lowercase command name of the operation."""
+        return self.__class__.__name__.lower()
 
 
-class Addition(Operation):
-    """
-    Addition operation implementation.
-
-    Performs the addition of two numbers.
-    """
+class Add(Operation):
+    """Addition operation: a + b."""
 
     def execute(self, a: Decimal, b: Decimal) -> Decimal:
-        """
-        Add two numbers.
-
-        Args:
-            a (Decimal): First operand.
-            b (Decimal): Second operand.
-
-        Returns:
-            Decimal: Sum of the two operands.
-        """
-        self.validate_operands(a, b)
         return a + b
 
+    def __str__(self) -> str:
+        return "add"
 
-class Subtraction(Operation):
-    """
-    Subtraction operation implementation.
 
-    Performs the subtraction of one number from another.
-    """
+class Subtract(Operation):
+    """Subtraction operation: a - b."""
 
     def execute(self, a: Decimal, b: Decimal) -> Decimal:
-        """
-        Subtract one number from another.
-
-        Args:
-            a (Decimal): First operand.
-            b (Decimal): Second operand.
-
-        Returns:
-            Decimal: Difference between the two operands.
-        """
-        self.validate_operands(a, b)
         return a - b
 
+    def __str__(self) -> str:
+        return "subtract"
 
-class Multiplication(Operation):
-    """
-    Multiplication operation implementation.
 
-    Performs the multiplication of two numbers.
-    """
+class Multiply(Operation):
+    """Multiplication operation: a * b."""
 
     def execute(self, a: Decimal, b: Decimal) -> Decimal:
-        """
-        Multiply two numbers.
-
-        Args:
-            a (Decimal): First operand.
-            b (Decimal): Second operand.
-
-        Returns:
-            Decimal: Product of the two operands.
-        """
-        self.validate_operands(a, b)
         return a * b
 
+    def __str__(self) -> str:
+        return "multiply"
 
-class Division(Operation):
-    """
-    Division operation implementation.
 
-    Performs the division of one number by another.
-    """
-
-    def validate_operands(self, a: Decimal, b: Decimal) -> None:
-        """
-        Validate operands, checking for division by zero.
-
-        Overrides the base class method to ensure that the divisor is not zero.
-
-        Args:
-            a (Decimal): Dividend.
-            b (Decimal): Divisor.
-
-        Raises:
-            ValidationError: If the divisor is zero.
-        """
-        super().validate_operands(a, b)
-        if b == 0:
-            raise ValidationError("Division by zero is not allowed")
-
-    def execute(self, a: Decimal, b: Decimal) -> Decimal:
-        """
-        Divide one number by another.
-
-        Args:
-            a (Decimal): Dividend.
-            b (Decimal): Divisor.
-
-        Returns:
-            Decimal: Quotient of the division.
-        """
-        self.validate_operands(a, b)
-        return a / b
-
-class Modulus(Operation):
-    """Compute the remainder of the division of two numbers."""
+class Divide(Operation):
+    """Division operation: a / b."""
 
     def execute(self, a: Decimal, b: Decimal) -> Decimal:
         if b == Decimal("0"):
-            raise ValidationError("Modulus by zero is not allowed")
-        return a % b
+            raise OperationError("Cannot divide by zero")
+        try:
+            return a / b
+        except InvalidOperation as exc:
+            raise OperationError(f"Division failed: {exc}") from exc
+
+    def __str__(self) -> str:
+        return "divide"
+
+
+class IntegerDivision(Operation):
+    """Integer (floor) division operation: a // b."""
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        if b == Decimal("0"):
+            raise OperationError("Cannot divide by zero")
+        try:
+            return Decimal(int(a // b))
+        except (InvalidOperation, ValueError) as exc:
+            raise OperationError(f"Integer division failed: {exc}") from exc
+
+    def __str__(self) -> str:
+        return "integer_division"
+
+
+class Percent(Operation):
+    """
+    Percentage operation: calculates what percentage 'a' is of 'b' ((a / b) * 100).
+    """
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        if b == Decimal("0"):
+            raise OperationError("Cannot calculate percentage with zero base")
+        try:
+            return (a / b) * Decimal("100")
+        except InvalidOperation as exc:
+            raise OperationError(f"Percent calculation failed: {exc}") from exc
+
+    def __str__(self) -> str:
+        return "percent"
 
 
 class Power(Operation):
-    """
-    Power (exponentiation) operation implementation.
-
-    Raises one number to the power of another.
-    """
-
-    def validate_operands(self, a: Decimal, b: Decimal) -> None:
-        """
-        Validate operands for power operation.
-
-        Overrides the base class method to ensure that the exponent is not negative.
-
-        Args:
-            a (Decimal): Base number.
-            b (Decimal): Exponent.
-
-        Raises:
-            ValidationError: If the exponent is negative.
-        """
-        super().validate_operands(a, b)
-        if b < 0:
-            raise ValidationError("Negative exponents not supported")
+    """Exponentiation operation: a ** b."""
 
     def execute(self, a: Decimal, b: Decimal) -> Decimal:
-        """
-        Calculate one number raised to the power of another.
+        try:
+            if b == Decimal("0"):
+                return Decimal("1")
+            if b == b.to_integral_value():
+                return a ** int(b)
+            return Decimal(str(pow(float(a), float(b))))
+        except Exception as exc:
+            raise OperationError(f"Power calculation failed: {exc}") from exc
 
-        Args:
-            a (Decimal): Base number.
-            b (Decimal): Exponent.
-
-        Returns:
-            Decimal: Result of the exponentiation.
-        """
-        self.validate_operands(a, b)
-        return Decimal(pow(float(a), float(b)))
+    def __str__(self) -> str:
+        return "power"
 
 
 class Root(Operation):
-    """
-    Root operation implementation.
-
-    Calculates the nth root of a number.
-    """
-
-    def validate_operands(self, a: Decimal, b: Decimal) -> None:
-        """
-        Validate operands for root operation.
-
-        Overrides the base class method to ensure that the number is non-negative
-        and the root degree is not zero.
-
-        Args:
-            a (Decimal): Number from which the root is taken.
-            b (Decimal): Degree of the root.
-
-        Raises:
-            ValidationError: If the number is negative or the root degree is zero.
-        """
-        super().validate_operands(a, b)
-        if a < 0:
-            raise ValidationError("Cannot calculate root of negative number")
-        if b == 0:
-            raise ValidationError("Zero root is undefined")
-
-    def execute(self, a: Decimal, b: Decimal) -> Decimal:
-        """
-        Calculate the nth root of a number.
-
-        Args:
-            a (Decimal): Number from which the root is taken.
-            b (Decimal): Degree of the root.
-
-        Returns:
-            Decimal: Result of the root calculation.
-        """
-        self.validate_operands(a, b)
-        return Decimal(pow(float(a), 1 / float(b)))
-
-class Percentage(Operation):
-    """Calculate the percentage of one number with respect to another ((a / b) * 100)."""
+    """Nth root operation: b-th root of a (a ** (1 / b))."""
 
     def execute(self, a: Decimal, b: Decimal) -> Decimal:
         if b == Decimal("0"):
-            raise ValidationError("Base cannot be zero for percentage calculation")
-        return (a / b) * Decimal("100")
+            raise OperationError("Cannot compute zeroth root")
+        if a < Decimal("0"):
+            raise OperationError("Cannot calculate root of negative number")
+        try:
+            root_val = pow(float(a), 1.0 / float(b))
+            return Decimal(str(root_val))
+        except Exception as exc:
+            raise OperationError(f"Root calculation failed: {exc}") from exc
+
+    def __str__(self) -> str:
+        return "root"
+
+
+class Modulus(Operation):
+    """Modulus (remainder) operation: a % b."""
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
+        if b == Decimal("0"):
+            raise OperationError("Cannot perform modulus by zero")
+        try:
+            return a % b
+        except InvalidOperation as exc:
+            raise OperationError(f"Modulus operation failed: {exc}") from exc
+
+    def __str__(self) -> str:
+        return "modulus"
+
 
 class AbsoluteDiff(Operation):
-    def execute(self, a: float, b: float) -> float:
+    """Absolute difference operation: |a - b|."""
+
+    def execute(self, a: Decimal, b: Decimal) -> Decimal:
         return abs(a - b)
+
+    def __str__(self) -> str:
+        return "absolute_diff"
 
 
 class OperationFactory:
-    """
-    Factory class for creating operation instances.
+    """Factory for registering, listing, and instantiating operations."""
 
-    Implements the Factory pattern by providing a method to instantiate
-    different operation classes based on a given operation type. This promotes
-    scalability and decouples the creation logic from the Calculator class.
-    """
-
-    # Dictionary mapping operation identifiers to their corresponding classes
-    _operations: Dict[str, type] = {
-        'add': Addition,
-        'subtract': Subtraction,
-        'multiply': Multiplication,
-        'divide': Division,
-        'power': Power,
-        'root': Root,
-        'modulus': Modulus,
-        'percent': Percentage,
-        'absolute_diff': AbsoluteDiff
+    _operations: Dict[str, Type[Operation]] = {
+        "add": Add,
+        "subtract": Subtract,
+        "multiply": Multiply,
+        "divide": Divide,
+        "integer_division": IntegerDivision,
+        "percent": Percent,
+        "power": Power,
+        "root": Root,
+        "modulus": Modulus,
+        "absolute_diff": AbsoluteDiff,
     }
 
     @classmethod
-    def list_operations(cls) -> List[str]:
-        """Return a list of all registered operation names."""
-        return list(cls._operations.keys())
-    
-    @classmethod
-    def register_operation(cls, name: str, operation_class: type) -> None:
+    def create_operation(cls, op_name: str) -> Operation:
         """
-        Register a new operation type.
-
-        Allows dynamic addition of new operations to the factory.
+        Instantiate an Operation by name (case-insensitive).
 
         Args:
-            name (str): Operation identifier (e.g., 'modulus').
-            operation_class (type): The class implementing the new operation.
-
-        Raises:
-            TypeError: If the operation_class does not inherit from Operation.
-        """
-        if not issubclass(operation_class, Operation):
-            raise TypeError("Operation class must inherit from Operation")
-        cls._operations[name.lower()] = operation_class
-
-    @classmethod
-    def create_operation(cls, operation_type: str) -> Operation:
-        """
-        Create an operation instance based on the operation type.
-
-        This method retrieves the appropriate operation class from the
-        _operations dictionary and instantiates it.
-
-        Args:
-            operation_type (str): The type of operation to create (e.g., 'add').
+            op_name: Name of operation (e.g. 'add', 'integer_division')
 
         Returns:
-            Operation: An instance of the specified operation class.
+            Operation: An instance of the requested operation class
 
         Raises:
-            ValueError: If the operation type is unknown.
+            OperationError: If the operation name is not registered
         """
-        operation_class = cls._operations.get(operation_type.lower())
-        if not operation_class:
-            raise ValueError(f"Unknown operation: {operation_type}")
-        return operation_class()
+        cleaned_name = op_name.strip().lower()
+        op_cls = cls._operations.get(cleaned_name)
+        if not op_cls:
+            raise OperationError(f"Unsupported operation: '{op_name}'")
+        return op_cls()
+
+    @classmethod
+    def list_operations(cls) -> List[str]:
+        """Return the list of all available operation command names."""
+        return list(cls._operations.keys())
+
+    @classmethod
+    def register_operation(cls, name: str, op_cls: Type[Operation]) -> None:
+        """
+        Dynamically register a new operation.
+
+        Args:
+            name: Operation command name
+            op_cls: Operation subclass
+        """
+        cls._operations[name.strip().lower()] = op_cls
